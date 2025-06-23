@@ -28,6 +28,11 @@ void Request::handle_message(const std::string& response)
         // 
         this->onResponseReceived(response);
     }
+    
+    std::lock_guard<std::mutex> lock(this->exec_mtx);
+    this->resp_received = true;
+    
+    this->exec_cv.notify_one();  // ✅  Notify the waiting thread that a response has been received
 
     if(this->reqHandler->reqExecEnded() && this->onExecCmdsFinished) {
         this->onExecCmdsFinished();
@@ -39,21 +44,23 @@ void Request::handle_message(const std::string& response)
     }
 }
 
-void Request::start_monitoring_one_cmd(void)
+void Request::check_response(void)
 {
     // Start a thread to monitor the command execution
     std::unique_lock<std::mutex> lock(this->exec_mtx);
     
-    bool timeout = !this->exec_cv.wait_for(lock, std::chrono::seconds(5), [this]() { return ; });
-    
+    this->resp_received = false; // Reset the response received flag
+
+    bool timeout = !this->exec_cv.wait_for(lock, std::chrono::seconds(5), [this]() { return this->resp_received; });
+
     if(timeout)
     {
-        // If timeout occurs, we can handle it here
-        std::cerr << "Command execution timed out." << std::endl;
-        // You can also throw an exception or handle it as needed
-        break; // Exit the loop if you want to stop monitoring
+        // If timeout occurs, it means response failed to be sent, terminate the request
+        // callback for application
+        if (this->onResponseMissed) {
+            this->onResponseMissed();
+        }
     }
-
 }
 
 /** ===================================================================================== //
@@ -78,16 +85,6 @@ Request::Request(const std::string &jigId,
             this->handle_message(message);
         }
     );
-}
-
-void Request::set_on_response_received(std::function<void(const std::string &)> callback)
-{
-    this->onResponseReceived = std::move(callback);
-}
-
-void Request::set_on_exec_cmds_finished(std::function<void()> callback)
-{
-    this->onExecCmdsFinished = std::move(callback);
 }
 
 void Request::validate(void)
@@ -122,9 +119,30 @@ void Request::execute(void)
     const std::string currCmd = this->reqHandler->prepareCommand();
     if(!currCmd.empty())
     {
-        // start monitoring the command execution
-        if(this->)
+        this->exec_thread = std::thread([this](void) {
+            // Publish the command to the request topic
+            this->check_response();
+        });
+
+        this->exec_thread.detach(); // Detach the thread to run independently
+
         MqttManager::getInstance().publish(this->req_topic, currCmd, 1, false);
     }
 }
+
+void Request::set_on_response_received(std::function<void(const std::string &)> callback)
+{
+    this->onResponseReceived = std::move(callback);
+}
+
+void Request::set_on_response_missed(std::function<void(void)> callback)
+{
+    this->onResponseMissed = std::move(callback);
+}
+
+void Request::set_on_exec_cmds_finished(std::function<void()> callback)
+{
+    this->onExecCmdsFinished = std::move(callback);
+}
+
 

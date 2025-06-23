@@ -1,5 +1,6 @@
 #include <sstream>
 #include <memory>
+#include <future>
 #include "AppController.hpp"
 
 #include "00_main_window.hpp"
@@ -188,6 +189,10 @@ void AppController::on_send_button_pressed(void)
         this->on_req_response_received(response);
     });
 
+    this->current_request->set_on_response_missed([this]() {
+        this->on_response_missed();
+    });
+
     this->current_request->set_on_exec_cmds_finished([this]() {
         this->current_request.reset();
     });
@@ -201,12 +206,22 @@ void AppController::on_req_response_received(const std::string& response)
     // sent the one after it - if request existed.
     if (this->current_request)
     {
-        write_line_on_req_output_terminal(GetActiveWindow(), false, response);
+        write_line_on_req_output_terminal(getInstance_main_window(), false, response);
     }
     else
     {
         // display "No request sent, although received a response"
-        write_line_on_req_output_terminal(GetActiveWindow(), false, "No request sent, although received: " + response);
+        write_line_on_req_output_terminal(getInstance_main_window(), false, "No request sent, although received: " + response);
+    }
+}
+
+void AppController::on_response_missed(void)
+{
+    // sent the one after it - if request existed.
+    if (this->current_request)
+    {
+        write_line_on_req_output_terminal(getInstance_main_window(), false, "No response received, request terminated.");
+        // terminate the current request
     }
 }
 

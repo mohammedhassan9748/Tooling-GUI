@@ -45,6 +45,8 @@ public:
 
     void on_req_response_received(const std::string& response);
 
+    void on_response_missed(void);
+
     void on_change_wifi_status(bool);
 
     void on_debug_data_received(const std::string& debugData);

@@ -29,17 +29,18 @@ private:
 	
 	std::function<void(const std::string&)> onResponseReceived = nullptr;
 	std::function<void()> onExecCmdsFinished = nullptr;	
+	std::function<void(void)> onResponseMissed = nullptr;
 
 	IRequestHandler *reqHandler = nullptr;
 
+	std::thread exec_thread;
 	std::mutex exec_mtx;
 	std::condition_variable exec_cv;
 	bool resp_received = false;
 
 	void handle_message(const std::string& response);
-	void start_monitoring_one_cmd(void);
-	void monitoring_one_cmd_loop(void);
-
+	void check_response(void);
+	
 public:
 
 	// RAII(Resource Acquisition Is Initialization): Rule(0)
@@ -69,6 +70,8 @@ public:
 	void set_on_response_received(std::function<void(const std::string&)> callback);
 
 	void set_on_exec_cmds_finished(std::function<void()> callback);
+
+	 void set_on_response_missed(std::function<void(void)> callback);
 };
 
 #endif // REQUEST_HPP

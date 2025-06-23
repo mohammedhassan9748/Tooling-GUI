@@ -1,0 +1,200 @@
+@startuml my_design
+
+' 1. Composition
+' class Car
+' class Engine
+' Car *-- Engine : has-a
+
+' 2. Association
+' class Teacher
+' class Student
+' Teacher --> Student : teaches
+
+' 3. Realization
+' interface IAnimal
+' class Dog
+' Dog ..|> IAnimal : implements
+
+' 4. Inheritance
+' class Animal
+' class Cat
+' Cat --|> Animal : extends
+
+' 5. Dependency
+' class OrderService
+' class Logger
+' OrderService ..> Logger : uses
+
+
+class Request {
+    - jigId: const std::string&
+    - action: const std::string&
+    - parameter: const std::string&
+    - args: const std::vector<std::string>&
+    - number_of_commands: size_t
+    - command_idx: size_t
+    + validate()
+    + execute()
+    + send_one_command()
+}
+
+interface IRequestHandler {
+    + ~IRequestHandler()
+    + validateArgs(args: const std::vector<std::string>&): ArgValidationResult
+    + getCmds(): const std::vector<std::string>&
+}
+
+class ClearChannelRequest {
+    - exec_cmds: std::vector<std::string>
+    + ClearChannelReqHandler()
+    + ~ClearChannelReqHandler()
+}
+
+class ClearErrorReqHandler {
+    - exec_cmds: std::vector<std::string>
+    + ClearErrorReqHandler()
+    + ~ClearErrorReqHandler()
+}
+
+class ClearTestReqHandler {
+    - exec_cmds: std::vector<std::string>
+    + ClearTestReqHandler()
+    + ~ClearTestReqHandler()
+}
+
+class GetChannelReqHandler {
+    - exec_cmds: std::vector<std::string>
+    + GetChannelReqHandler()
+    + ~GetChannelReqHandler()
+}
+
+class GetErrorReqHandler {
+    - exec_cmds: std::vector<std::string>
+    + GetErrorReqHandler()
+    + ~GetErrorReqHandler()
+}
+
+class GetTestReqHandler {
+    - exec_cmds: std::vector<std::string>
+    + GetTestReqHandler()
+    + ~GetTestReqHandler()
+}
+
+class SetChannelReqHandler {
+    - exec_cmds: std::vector<std::string>
+    + SetChannelReqHandler()
+    + ~SetChannelReqHandler()
+}
+
+class SetErrorReqHandler {
+    - exec_cmds: std::vector<std::string>
+    + SetErrorReqHandler()
+    + ~SetErrorReqHandler()
+}
+
+class SetTestReqHandler {
+    - exec_cmds: std::vector<std::string>
+    + SetTestReqHandler()
+    + ~SetTestReqHandler()
+}
+
+enum Status {
+    OK
+    EMPTY_ARGS
+    NON_NUMERIC_ARG
+    OUT_OF_RANGE
+    INVALID_FORMAT
+    UNKNOWN_ERROR
+}
+
+class ArgValidationResult {
+    - reason_: std::string
+    - status_: Status
+    
+    + ArgValidationResult(const ArgValidationResult &)
+    + operator=(const ArgValidationResult &): ArgValidationResult&
+    + ArgValidationResult(ArgValidationResult &&)
+    + operator=(ArgValidationResult &&): ArgValidationResult&
+    + ~ArgValidationResult()
+    + ArgValidationResult(status: Status, reason: std::string)
+    + ArgValidationResult(status: Status)
+    + getStatus(): Status
+    + getReason(): std::string
+    + to_string(): std::string
+}
+
+class RequestHandlerRegistry <<singleton>> {
+    - request_handlers: std::unordered_map<ActionParamKey, std::unique_ptr<IRequestHandler>>
+    - RequestHandlerRegistry()
+    + getInstance(): RequestHandlerRegistry
+    + register_handler(action: std::string, param: std::string, handler: std::unique_ptr<IRequestHandler>)
+    + get_request_handler(action: std::string, param: std::string): IRequestHandler*
+}
+
+class ActionParamKey {
+    - action: std::string
+    - parameter: std::string
+    
+    + ActionParamKey(a: std::string, p: std::string)
+    + operator==(other: ActionParamKey): bool
+    + get_action(): const std::string&
+    + get_parameter(): const std::string&
+}
+
+
+class JigWifiMonitor {
+    + JigWifiMonitor()
+    + subscribe(jigID: const std::string&)
+    + start_monitoring(onStatusChange: std::function<void(bool)>)
+    + get_jig_connection_status(): const std::string&
+    + get_jig_network_name(): const std::string&
+    + get_jig_mac_address(): const std::string&
+
+
+    - jig_connection_status: std::string
+    - jig_network_name: std::string
+    - jig_mac_address: std::string
+
+    - _disconnected_status: const std::string
+    - _disconnected_network: const std::string
+    - _disconnected_mac: const std::string
+
+    - parse_wifi_data(data: const std::string&): bool
+    - handle_message(message: const std::string&): void
+    - monitoring_loop(): void
+
+    - connected: std::atomic<bool>
+    - last_update_time: std::chrono::steady_clock::time_point
+
+    - on_message_cb: std::function<void(void)>
+    - on_status_change_cb: std::function<void(bool)>
+    - monitor_thread: std::thread
+}
+
+class JigDebugMonitor {
+    + JigDebugMonitor(jigID: const std::string&)
+    + set_on_debug_data_callback(callback: std::function<void(const std::string&)>)
+
+    - current_debug_data: std::string
+    - subscribe(jigID: const std::string&): void
+    - on_debug_data_cb: std::function<void(const std::string&)>
+}
+
+' Relationships
+
+Request --> IRequestHandler
+IRequestHandler         .right.> ArgValidationResult
+ClearChannelRequest     .up.|> IRequestHandler
+ClearErrorReqHandler    .up.|> IRequestHandler
+ClearTestReqHandler     .up.|> IRequestHandler
+GetChannelReqHandler    .up.|> IRequestHandler
+GetErrorReqHandler      .up.|> IRequestHandler
+GetTestReqHandler       .up.|> IRequestHandler
+SetChannelReqHandler    .up.|> IRequestHandler
+SetErrorReqHandler      .up.|> IRequestHandler
+SetTestReqHandler       .up.|> IRequestHandler
+
+ArgValidationResult *-right- Status
+RequestHandlerRegistry -left-* ActionParamKey
+RequestHandlerRegistry -right-* IRequestHandler
+@enduml

@@ -123,7 +123,7 @@ void AppController::on_send_button_pressed(void)
 
     // Check if a request is already in progress
     if (this->current_request) {
-        write_line_on_req_output_terminal(hwnd, false, "-> A request is already in progress.");
+        write_line_on_req_output_terminal(hwnd, false, "A request is already in progress.");
         return;
     }
 
@@ -221,7 +221,10 @@ void AppController::on_response_missed(void)
     if (this->current_request)
     {
         write_line_on_req_output_terminal(getInstance_main_window(), false, "No response received, request terminated.");
-        // terminate the current request
+        // Copy the request before termination
+        std::shared_ptr<Request> cpyReq = this->current_request;
+        // Terminate the request, reset the current request
+        this->current_request.reset();
     }
 }
 

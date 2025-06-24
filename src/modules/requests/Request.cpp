@@ -32,7 +32,8 @@ void Request::handle_message(const std::string& response)
     std::lock_guard<std::mutex> lock(this->exec_mtx);
     this->resp_received = true;
     
-    this->exec_cv.notify_one();  // ✅  Notify the waiting thread that a response has been received
+    // Notify the waiting thread that a response has been received
+    this->exec_cv.notify_one();
 
     if(this->reqHandler->reqExecEnded() && this->onExecCmdsFinished) {
         this->onExecCmdsFinished();
@@ -144,5 +145,3 @@ void Request::set_on_exec_cmds_finished(std::function<void()> callback)
 {
     this->onExecCmdsFinished = std::move(callback);
 }
-
-

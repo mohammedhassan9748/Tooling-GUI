@@ -95,13 +95,16 @@ void create_jig_wifi_boxes(HWND hwnd)
     LOGFONT lf = {0};
     GetObject(refFont, sizeof(LOGFONT), &lf);
     lf.lfWeight = FW_BOLD;
+    HFONT first = CreateFontIndirect(&lf);
+    lf.lfHeight = lf.lfHeight * 1.3; // Increase font size by 30%
+    if (lf.lfHeight == 0) lf.lfHeight = -18; // fallback if original is 0
     HFONT hBoldFont = CreateFontIndirect(&lf);
 
-    SendMessage(hWifiConnectionGroupBox, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
+    SendMessage(hWifiConnectionGroupBox, WM_SETFONT, (WPARAM)first, TRUE);
     SendMessage(hWifiConnectionStatusBox, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
-    SendMessage(hWifiNetworkGroupBox, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
+    SendMessage(hWifiNetworkGroupBox, WM_SETFONT, (WPARAM)first, TRUE);
     SendMessage(hWifiNetworkStatusBox, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
-    SendMessage(hMacAddressGroupBox, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
+    SendMessage(hMacAddressGroupBox, WM_SETFONT, (WPARAM)first, TRUE);
     SendMessage(hMacAddressStatusBox, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
 }
 

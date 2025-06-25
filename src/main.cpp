@@ -49,7 +49,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 handle_connect_button_click(hwnd);
                 break;
             case ID_CONNECTION_ESTABLISHED:
-                std::cout << "IDDDDDDDDDDDDDDDDDDDDDD." << std::endl;
                 EnumChildWindows(hwnd, DestroyChildProc, 0);    // destroy the old window
                 create_main_menu_views(hwnd);   // create the new window
                 break;
@@ -76,7 +75,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         {
             HDC hdcStatic = (HDC)wParam;
             HWND hStatic = (HWND)lParam;
-            if(hStatic == getInstance_choosen_jig_id())
+            if(hStatic == getInstance_choosen_jig_id() || hStatic ==  getInstance_connection_status_box())
             {
                 SetBkMode(hdcStatic, TRANSPARENT);
                 return (INT_PTR)(GetSysColorBrush(COLOR_WINDOW));

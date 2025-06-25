@@ -239,6 +239,6 @@ void AppController::on_change_wifi_status(bool connection)
 
 void AppController::on_debug_data_received(const std::string& debugData)
 {
-    write_line_on_debug_output_terminal(getInstance_main_window(), debugData);
+    write_on_debug_output_terminal(getInstance_main_window(), debugData);
 }
 

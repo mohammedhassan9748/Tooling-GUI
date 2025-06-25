@@ -49,7 +49,7 @@ void create_debug_output_terminal(HWND hwnd)
     }
 }
 
-static void write_on_debug_output_terminal(HWND hwnd, const std::string& text)
+void write_on_debug_output_terminal(HWND hwnd, const std::string& text)
 {    
     if (hDebugOutputTerminal)
     {
